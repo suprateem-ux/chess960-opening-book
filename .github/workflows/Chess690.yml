@@ -19,7 +19,7 @@ jobs:
 
       - name: Clone and build Polyglot
         run: |
-          git clone https://github.com/ddugovic/polyglot.git
+          git clone https://github.com/fsmosca/polyglot.git
           cd polyglot
           make
           cd ..
