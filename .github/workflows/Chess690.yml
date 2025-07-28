@@ -1,0 +1,40 @@
+name: Generate Chess960 Polyglot Book
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install build tools & python-chess
+        run: |
+          sudo apt update
+          sudo apt install -y make g++ curl
+          pip install chess
+
+      - name: Clone and build Polyglot
+        run: |
+          git clone https://github.com/ddugovic/polyglot.git
+          cd polyglot
+          make
+          cd ..
+
+      - name: Make custom Stockfish executable
+        run: chmod +x stockfish/stockfish-ubuntu-x86-64-bmi2
+
+      - name: Extract FENs from PGN
+        run: python extract_fens.py
+
+      - name: Generate book.bin via script
+        run: python build_book_py.py
+
+      - name: Upload book.bin artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: chess960-book
+          path: book.bin
