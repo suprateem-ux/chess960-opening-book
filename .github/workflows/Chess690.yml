@@ -34,7 +34,7 @@ jobs:
         run: python build_book.py
 
       - name: Upload book.bin artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: chess960-book
           path: book.bin
