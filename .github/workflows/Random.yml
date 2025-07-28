@@ -1,0 +1,54 @@
+name: Generate Chess960 Polyglot Book
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-book:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y polyglot
+
+      - name: Make Stockfish executable
+        run: chmod +x stockfish/stockfish-ubuntu-x86-64-bmi2
+
+      - name: Generate Polyglot book
+        run: |
+          polyglot make-book \
+            -pgn chess960_book_3moves.pgn \
+            -bin book.bin \
+            -max-ply 30 \
+            -engine stockfish/stockfish-ubuntu-x86-64-bmi2 \
+            -verbose
+
+      - name: Check book.bin file
+        id: validate
+        run: |
+          if [ -f book.bin ]; then
+            size=$(stat -c%s book.bin)
+            echo "Book size: $size bytes"
+            if [ $((size % 16)) -eq 0 ]; then
+              echo "✅ book.bin is valid (size divisible by 16)"
+              echo "valid=true" >> $GITHUB_OUTPUT
+            else
+              echo "❌ book.bin is invalid (not divisible by 16)"
+              echo "valid=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ book.bin not found"
+            echo "valid=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload book.bin if valid
+        if: steps.validate.outputs.valid == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: polyglot-book-depth15
+          path: book.bin
