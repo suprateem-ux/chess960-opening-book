@@ -17,7 +17,7 @@ jobs:
           python-version: 3.11
 
       - name: Install polyglot package
-        run: pip install polyglot
+        run: pip install polyglot six
 
       - name: Set stockfish executable permission
         run: chmod +x stockfish/stockfish-ubuntu-x86-64-bmi2
