@@ -1,0 +1,51 @@
+name: Generate Chess960 Polyglot Book
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate_book:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y make g++ curl
+
+      - name: Clone and build Polyglot
+        run: |
+          git clone https://github.com/ddugovic/polyglot.git
+          cd polyglot
+          make
+          cd ..
+
+      - name: Set permissions for Stockfish
+        run: chmod +x stockfish/stockfish-ubuntu-x86-64-bmi2
+
+      - name: Convert PGN to Polyglot book (depth 15)
+        run: |
+          ./polyglot/polyglot make-book \
+            -pgn chess960_book_3moves.pgn \
+            -bin book.bin \
+            -depth 15 \
+            -engine stockfish/stockfish-ubuntu-x86-64-bmi2
+
+      - name: Verify book.bin validity (size divisible by 16)
+        run: |
+          size=$(stat -c%s "book.bin")
+          echo "Book size: $size bytes"
+          if [ $((size % 16)) -ne 0 ]; then
+            echo "❌ Error: book.bin is NOT valid (size not divisible by 16)"
+            exit 1
+          fi
+          echo "✅ book.bin is valid (size divisible by 16)"
+
+      - name: Upload book.bin as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess960-book
+          path: book.bin
