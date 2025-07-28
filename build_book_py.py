@@ -2,17 +2,14 @@ import chess.pgn
 import chess.engine
 import chess.polyglot
 import struct
-import os
 
 STOCKFISH_PATH = "stockfish/stockfish-ubuntu-x86-64-bmi2"
 PGN_FILE = "chess960_book_3moves.pgn"
 BIN_FILE = "book.bin"
 MAX_DEPTH = 15
 
-def polyglot_key(board):
-    return chess.polyglot.zobrist_hash(board)
-
-def write_entry(f, key, move, board, weight=1, learn=0):
+def write_entry(f, board, move, weight=1, learn=0):
+    key = chess.polyglot.zobrist_hash(board)
     encoded_move = chess.polyglot.encode_move(board, move)
     encoded = struct.pack(">QHHI", key, encoded_move, weight, learn)
     f.write(encoded)
@@ -25,10 +22,9 @@ def build_book():
             for move in game.mainline_moves():
                 if board.fullmove_number * 2 > MAX_DEPTH:
                     break
-                key = polyglot_key(board)
-                if (key, move) not in seen:
-                    seen.add((key, move))
-                    write_entry(bin_file, key, move, board)
+                if (board.fen(), move.uci()) not in seen:
+                    seen.add((board.fen(), move.uci()))
+                    write_entry(bin_file, board, move)
                 board.push(move)
     print(f"✅ Finished writing {len(seen)} positions to {BIN_FILE}")
 
