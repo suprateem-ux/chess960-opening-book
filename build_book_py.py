@@ -1,5 +1,6 @@
 import chess.pgn
 import chess.engine
+import chess.polyglot
 import struct
 import os
 
@@ -9,11 +10,11 @@ BIN_FILE = "book.bin"
 MAX_DEPTH = 15
 
 def polyglot_key(board):
-    import chess.polyglot
     return chess.polyglot.zobrist_hash(board)
 
-def write_entry(f, key, move, weight=1, learn=0):
-    encoded = struct.pack(">QHHI", key, move.polyglot(), weight, learn)
+def write_entry(f, key, move, board, weight=1, learn=0):
+    encoded_move = chess.polyglot.encode_move(board, move)
+    encoded = struct.pack(">QHHI", key, encoded_move, weight, learn)
     f.write(encoded)
 
 def build_book():
@@ -27,7 +28,7 @@ def build_book():
                 key = polyglot_key(board)
                 if (key, move) not in seen:
                     seen.add((key, move))
-                    write_entry(bin_file, key, move)
+                    write_entry(bin_file, key, move, board)
                 board.push(move)
     print(f"✅ Finished writing {len(seen)} positions to {BIN_FILE}")
 
