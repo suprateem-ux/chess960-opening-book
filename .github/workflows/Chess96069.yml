@@ -20,7 +20,7 @@ jobs:
         run: chmod +x stockfish/stockfish-ubuntu-x86-64-bmi2
 
       - name: Run build_book_py.py
-        run: python build_book_py.py
+        run: python Build.py
 
       - name: Check book.bin file
         id: check
