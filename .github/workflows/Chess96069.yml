@@ -1,0 +1,47 @@
+name: Build Chess960 Book with Python
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip
+          pip install chess
+
+      - name: Make Stockfish executable
+        run: chmod +x stockfish/stockfish-ubuntu-x86-64-bmi2
+
+      - name: Run build_book_py.py
+        run: python build_book_py.py
+
+      - name: Check book.bin file
+        id: check
+        run: |
+          if [ -f book.bin ]; then
+            size=$(stat -c%s book.bin)
+            echo "Book size: $size"
+            if [ $((size % 16)) -eq 0 ]; then
+              echo "✅ book.bin is valid"
+              echo "valid=true" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Invalid book.bin (not divisible by 16)"
+              echo "valid=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ book.bin missing"
+            echo "valid=false" >> $GITHUB_OUTPUT
+
+      - name: Upload book
+        if: steps.check.outputs.valid == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: polyglot-book
+          path: book.bin
