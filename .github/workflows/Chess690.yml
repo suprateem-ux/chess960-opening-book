@@ -31,7 +31,7 @@ jobs:
         run: python extract_fens.py
 
       - name: Generate book.bin via script
-        run: python build_book_py.py
+        run: python build_book.py
 
       - name: Upload book.bin artifact
         uses: actions/upload-artifact@v3
