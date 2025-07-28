@@ -1,0 +1,29 @@
+name: Download and Commit Stockfish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download_and_commit_stockfish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # required for commit push
+
+      - name: Download Stockfish (BMI2)
+        run: |
+          curl -L -o stockfish.tar "https://github.com/official-stockfish/Stockfish/releases/download/stockfish-dev-20250724-a516b517/stockfish-ubuntu-x86-64-bmi2.tar"
+          tar -xf stockfish.tar
+          mv stockfish/stockfish ./stockfish
+          chmod +x ./stockfish
+
+      - name: Commit Stockfish binary to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stockfish
+          git commit -m "Add Stockfish BMI2 binary to root"
+          git push
